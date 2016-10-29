@@ -13,7 +13,7 @@
 
 
 /* N'hesitez pas a changer MAXX .*/
-#define MAXX  1000
+#define MAXX  500
 #define MAXY (MAXX * 3 / 4)
 
 /* definition de la longueur de l'image */
@@ -46,18 +46,20 @@ int main(int argc, char *argv[])
   if (rank == 0) {
 
     int colone[NY];
-
+	int z = 0;
     /* Begin User Program  - the master */
 
 /* Pour chaque pixel de l'image on attend un resultat INT d'un des fils
     On stocke cette valeur dans un tableau
  */
       for(i = -MAXX; i <= MAXX; i++) {
-          MPI_Recv(colone, 1, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
+          MPI_Recv(&colone, NY, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
           for(j = -MAXY; j <= MAXY; j++) {
-              cases[i + MAXX][j + MAXY] = colone[j];
+              cases[i + MAXX][j + MAXY] = colone[z];
+		z++;
               //printf("colone: %d\n", colone[j]);
           }
+	z=0;
           //printf("Test \n");
     }
 //Generation de l'image et acquittement de la tâche
@@ -69,8 +71,8 @@ int main(int argc, char *argv[])
 
     /* On est l'un des fils */
     double x, y;
-    int i, j, res, rc, colone[NY];
-    /* Pour chaque pixel de l'image on calcule le resultat en utilisant la fonction mandel() 
+    int i, j, res, rc, colone[NY], z=0;
+    /* Pour chaque pixel de l'image on calcule le resultat en utilisant la fonction mandel()
         Un message contenant le resultat est envoye a la machine maitre
      */
     for(i = -MAXX; i <= MAXX; i++) {
@@ -78,11 +80,13 @@ int main(int argc, char *argv[])
           x = 2 * i / (double)MAXX;
           y = 1.5 * j / (double)MAXY;
           res = mandel(x, y);
-          colone[j]=res;
-          printf("%d\n", colone[j]);
+          colone[z]=res;
+z++;
+          //printf("%d\n", colone[j]);
       }
+z=0;
         //for(j = -MAXY; j <= MAXY; j++) {printf("%d\n", colone[j]);}
-        MPI_Send(colone, 1 , MPI_INT, 0, DATATAG, MPI_COMM_WORLD);
+        MPI_Send(&colone, NY , MPI_INT, 0, DATATAG, MPI_COMM_WORLD);
     }
   }
 //Envoi de Finalize() pour terminer le programme
@@ -92,7 +96,7 @@ int main(int argc, char *argv[])
 
 
 
-/* function to compute a point - the number of iterations 
+/* function to compute a point - the number of iterations
    plays a central role here */
 
 int
@@ -143,4 +147,3 @@ dump_ppm(const char *filename, int valeurs[NX][NY])
   fclose(f);
   return 0;
 }
- 
