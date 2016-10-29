@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
           //printf("Test \n");
     }
 //Generation de l'image et acquittement de la tâche
-    dump_ppm("mandel.ppm", cases);
+    dump_ppm("mandel-ligne.ppm", cases);
     printf("Fini.\n");
   }
 

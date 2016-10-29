@@ -13,7 +13,7 @@
 
 
 /* N'hesitez pas a changer MAXX .*/
-#define MAXX  500
+#define MAXX  1000
 #define MAXY (MAXX * 3 / 4)
 
 /* definition de la longueur de l'image */
@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 {
   MPI_Status status;
   int i,j, num, rank, size, nbslaves;
+  int nColone= atoi(argv[1]);
   char inputstr [100],outstr [100];
 
   /* Start up MPI */
@@ -45,25 +46,25 @@ int main(int argc, char *argv[])
 
   if (rank == 0) {
 
-    int colone[NY];
-	int z = 0;
+  int colone[NY][nColone];
+	int z = 0, c;
     /* Begin User Program  - the master */
 
 /* Pour chaque pixel de l'image on attend un resultat INT d'un des fils
     On stocke cette valeur dans un tableau
  */
-      for(i = -MAXX; i <= MAXX; i++) {
-          MPI_Recv(&colone, NY, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
-          for(j = -MAXY; j <= MAXY; j++) {
-              cases[i + MAXX][j + MAXY] = colone[z];
-		z++;
-              //printf("colone: %d\n", colone[j]);
-          }
-	z=0;
-          //printf("Test \n");
+  for(i = -MAXX; i <= MAXX-1; i+=nColone) {
+    MPI_Recv(&colone, NY*nColone, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
+    for (c = 0; c < nColone; c++) {
+      for(j = -MAXY; j <= MAXY; j++) {
+        cases[i + c + MAXX][j + MAXY] = colone[z][c];
+		    z++;
+      }
+  	  z=0;
     }
+  }
 //Generation de l'image et acquittement de la tâche
-    dump_ppm("mandel.ppm", cases);
+    dump_ppm("mandel-multi-ligne.ppm", cases);
     printf("Fini.\n");
   }
 
@@ -71,23 +72,24 @@ int main(int argc, char *argv[])
 
     /* On est l'un des fils */
     double x, y;
-    int i, j, res, rc, colone[NY], z=0;
-    /* Pour chaque pixel de l'image on calcule le resultat en utilisant la fonction mandel()
-        Un message contenant le resultat est envoye a la machine maitre
-     */
-    for(i = -MAXX; i <= MAXX; i++) {
-      for(j = -MAXY; j <= MAXY; j++) {
-          x = 2 * i / (double)MAXX;
-          y = 1.5 * j / (double)MAXY;
-          res = mandel(x, y);
-          colone[z]=res;
-z++;
-          //printf("%d\n", colone[j]);
-      }
-z=0;
+    int i, j, res, rc, colone[NY][nColone], z=0, c;
+    /* Pour chaque nombre de ligne fixé en argument
+    on calcule les points de la fractale.*/
+      for(i = -MAXX; i <= MAXX-1; i+=nColone) {
+        for (c = 0; c < nColone; c++) {
+          for(j = -MAXY; j <= MAXY; j++) {
+            x = 2 * i+c / (double)MAXX;
+            y = 1.5 * j / (double)MAXY;
+            res = mandel(x, y);
+            colone[z][c]=res;
+            z++;
+          }
+          z=0;
+        }
+        MPI_Send(&colone, NY*nColone , MPI_INT, 0, DATATAG, MPI_COMM_WORLD);
+
         //for(j = -MAXY; j <= MAXY; j++) {printf("%d\n", colone[j]);}
-        MPI_Send(&colone, NY , MPI_INT, 0, DATATAG, MPI_COMM_WORLD);
-    }
+      }
   }
 //Envoi de Finalize() pour terminer le programme
   MPI_Finalize();
