@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
   MPI_Status status;
   int i,j, num, rank, size, nbslaves;
   int nColone= atoi(argv[1]);
+  double startTime, endTime;
   char inputstr [100],outstr [100];
 
   /* Start up MPI */
@@ -45,25 +46,27 @@ int main(int argc, char *argv[])
   nbslaves = size -1;
 
   if (rank == 0) {
+    int colone[NY][nColone];
+	  int z = 0, c;
+     /* Begin User Program  - the master */
 
-  int colone[NY][nColone];
-	int z = 0, c;
-    /* Begin User Program  - the master */
-
-/* Pour chaque pixel de l'image on attend un resultat INT d'un des fils
-    On stocke cette valeur dans un tableau
- */
-  for(i = -MAXX; i < MAXX; i+=nColone) {
-    MPI_Recv(&colone, NY*nColone, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
-    for (c = 0; c < nColone; c++) {
-      for(j = -MAXY; j <= MAXY; j++) {
-        cases[i + c + MAXX][j + MAXY] = colone[z][c];
-		    z++;
+     /* Pour chaque pixel de l'image on attend un resultat INT d'un des fils
+      On stocke cette valeur dans un tableau
+      */
+    startTime = MPI_Wtime();
+    for(i = -MAXX; i < MAXX; i+=nColone) {
+      MPI_Recv(&colone, NY*nColone, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
+      for (c = 0; c < nColone; c++) {
+        for(j = -MAXY; j <= MAXY; j++) {
+          cases[i + c + MAXX][j + MAXY] = colone[z][c];
+		      z++;
+        }
+  	    z=0;
       }
-  	  z=0;
     }
-  }
-//Generation de l'image et acquittement de la tâche
+    endTime = MPI_Wtime();
+    printf("That took %f seconds pour une largeur de %d et %d esclaves\n",endTime-startTime, MAXX, nbslaves);
+    //Generation de l'image et acquittement de la tâche
     dump_ppm("mandel-multi-ligne.ppm", cases);
     printf("Fini.\n");
   }
@@ -90,7 +93,7 @@ int main(int argc, char *argv[])
         //for(j = -MAXY; j <= MAXY; j++) {printf("%d\n", colone[j]);}
       }
   }
-//Envoi de Finalize() pour terminer le programme
+  //Envoi de Finalize() pour terminer le programme
   MPI_Finalize();
   return 0;
 }

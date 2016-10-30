@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 {
   MPI_Status status;
   int i,j, num, rank, size, nbslaves;
+  double startTime, endTime;
   char inputstr [100],outstr [100];
 
   /* Start up MPI */
@@ -52,6 +53,7 @@ int main(int argc, char *argv[])
 /* Pour chaque pixel de l'image on attend un resultat INT d'un des fils
     On stocke cette valeur dans un tableau
  */
+      startTime = MPI_Wtime();
       for(i = -MAXX; i <= MAXX; i++) {
           MPI_Recv(&colone, NY, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
           for(j = -MAXY; j <= MAXY; j++) {
@@ -62,6 +64,8 @@ int main(int argc, char *argv[])
 	z=0;
           //printf("Test \n");
     }
+    endTime = MPI_Wtime();
+    printf("That took %f seconds pour une largeur de %d et %d esclaves\n",endTime-startTime, MAXX, nbslaves);
 //Generation de l'image et acquittement de la tâche
     dump_ppm("mandel-ligne.ppm", cases);
     printf("Fini.\n");
