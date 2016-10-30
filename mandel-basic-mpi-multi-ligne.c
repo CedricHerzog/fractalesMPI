@@ -13,7 +13,7 @@
 
 
 /* N'hesitez pas a changer MAXX .*/
-#define MAXX  1000
+#define MAXX  500
 #define MAXY (MAXX * 3 / 4)
 
 /* definition de la longueur de l'image */
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 /* Pour chaque pixel de l'image on attend un resultat INT d'un des fils
     On stocke cette valeur dans un tableau
  */
-  for(i = -MAXX; i <= MAXX-1; i+=nColone) {
+  for(i = -MAXX; i < MAXX; i+=nColone) {
     MPI_Recv(&colone, NY*nColone, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
     for (c = 0; c < nColone; c++) {
       for(j = -MAXY; j <= MAXY; j++) {
@@ -75,10 +75,10 @@ int main(int argc, char *argv[])
     int i, j, res, rc, colone[NY][nColone], z=0, c;
     /* Pour chaque nombre de ligne fixé en argument
     on calcule les points de la fractale.*/
-      for(i = -MAXX; i <= MAXX-1; i+=nColone) {
+      for(i = -MAXX; i < MAXX; i+=nColone) {
         for (c = 0; c < nColone; c++) {
           for(j = -MAXY; j <= MAXY; j++) {
-            x = 2 * i+c / (double)MAXX;
+            x = 2 * (i+c) / (double)MAXX;
             y = 1.5 * j / (double)MAXY;
             res = mandel(x, y);
             colone[z][c]=res;
@@ -87,7 +87,6 @@ int main(int argc, char *argv[])
           z=0;
         }
         MPI_Send(&colone, NY*nColone , MPI_INT, 0, DATATAG, MPI_COMM_WORLD);
-
         //for(j = -MAXY; j <= MAXY; j++) {printf("%d\n", colone[j]);}
       }
   }
