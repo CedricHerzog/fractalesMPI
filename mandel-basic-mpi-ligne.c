@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
  */
       startTime = MPI_Wtime();
       for(i = -MAXX; i <= MAXX; i++) {
-          MPI_Recv(&colone, NY, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
+          MPI_Recv(&colone, NY, MPI_INT, MPI_ANY_SOURCE, DATATAG, MPI_COMM_WORLD, &status);
           for(j = -MAXY; j <= MAXY; j++) {
               cases[i + MAXX][j + MAXY] = colone[z];
 		z++;
