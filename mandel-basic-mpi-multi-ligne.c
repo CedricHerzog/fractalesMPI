@@ -75,10 +75,11 @@ int main(int argc, char *argv[])
 
     /* On est l'un des fils */
     double x, y;
-    int i, j, res, rc, colone[NY][nColone], z=0, c;
+    int i, j, res, rc, colone[NY][nColone], z=0, c, a=1;
     /* Pour chaque nombre de ligne fixé en argument
     on calcule les points de la fractale.*/
       for(i = -MAXX; i < MAXX; i+=nColone) {
+        if(rank==a){
         for (c = 0; c < nColone; c++) {
           for(j = -MAXY; j <= MAXY; j++) {
             x = 2 * (i+c) / (double)MAXX;
@@ -90,7 +91,10 @@ int main(int argc, char *argv[])
           z=0;
         }
         MPI_Send(&colone, NY*nColone , MPI_INT, 0, DATATAG, MPI_COMM_WORLD);
+        a++;
+        if(a>rank){a=1;}
         //for(j = -MAXY; j <= MAXY; j++) {printf("%d\n", colone[j]);}
+      }
       }
   }
   //Envoi de Finalize() pour terminer le programme
