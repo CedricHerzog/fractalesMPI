@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
       */
     startTime = MPI_Wtime();
     for(i = -MAXX; i < MAXX; i+=nColone) {
-      MPI_Recv(&colone, NY*nColone, MPI_INT, MPI_ANY_SOURCE, DATATAG, MPI_COMM_WORLD, &status);
+      MPI_Recv(&colone, NY*nColone, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
       for (c = 0; c < nColone; c++) {
         for(j = -MAXY; j <= MAXY; j++) {
           cases[i + c + MAXX][j + MAXY] = colone[z][c];
@@ -75,26 +75,22 @@ int main(int argc, char *argv[])
 
     /* On est l'un des fils */
     double x, y;
-    int i, j, res, rc, colone[NY][nColone], z=0, c, a=1;
+    int i, j, res, rc, colone[NY][nColone], z=0, c;
     /* Pour chaque nombre de ligne fixé en argument
     on calcule les points de la fractale.*/
       for(i = -MAXX; i < MAXX; i+=nColone) {
-        if(rank==a){
-        for (c = 0; c < nColone; c++) {
-          for(j = -MAXY; j <= MAXY; j++) {
-            x = 2 * (i+c) / (double)MAXX;
-            y = 1.5 * j / (double)MAXY;
-            res = mandel(x, y);
-            colone[z][c]=res;
-            z++;
+          for (c = 0; c < nColone; c++) {
+            for(j = -MAXY; j <= MAXY; j++) {
+              x = 2 * (i+c) / (double)MAXX;
+              y = 1.5 * j / (double)MAXY;
+              res = mandel(x, y);
+              colone[z][c]=res;
+              z++;
+            }
+            z=0;
           }
-          z=0;
-        }
-        MPI_Send(&colone, NY*nColone , MPI_INT, 0, DATATAG, MPI_COMM_WORLD);
-        a++;
-        if(a>rank){a=1;}
-        //for(j = -MAXY; j <= MAXY; j++) {printf("%d\n", colone[j]);}
-      }
+          MPI_Send(&colone, NY*nColone , MPI_INT, 0, DATATAG, MPI_COMM_WORLD);
+      //for(j = -MAXY; j <= MAXY; j++) {printf("%d\n", colone[j]);}
       }
   }
   //Envoi de Finalize() pour terminer le programme

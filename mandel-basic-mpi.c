@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
    for(i = -MAXX; i <= MAXX; i++) {
     for(j = -MAXY; j <= MAXY; j++) {
 
-      MPI_Recv(&res, 1, MPI_INT, MPI_ANY_SOURCE, DATATAG, MPI_COMM_WORLD, &status);
+      MPI_Recv(&res, 1, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
       cases[i + MAXX][j + MAXY] = res;
     }
     }
